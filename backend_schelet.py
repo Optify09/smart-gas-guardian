@@ -2,6 +2,7 @@ from flask import Flask, request
 import sqlite3
 from datetime import datetime
 import pandas as pd 
+import numpy as np
 from sklearn.ensemble import IsolationForest
 import threading
 import time
@@ -52,6 +53,8 @@ def train_model():
 
     df["timestamp"] = pd.to_datetime(df["timestamp"], format = "mixed")
     df["hour"] = df["timestamp"].dt.hour
+    df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+    df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
     df["rolling_mean"] = df["gas_value"].rolling(window = 150).mean()
     # La fiecare citire se deschide un sub-tabel care cotine valoarea
     # curenta si cele 149 de citire de dinainte de el si se face
@@ -65,7 +68,7 @@ def train_model():
     df["day_of_week"] = df["timestamp"].dt.dayofweek
 
     df_clean = df.dropna(subset = ["rolling_mean", "rolling_std"])
-    features = ["gas_value", "hour", "day_of_week", "rolling_mean", "rolling_std"]
+    features = ["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"]
     X = df_clean[features]
 
     # Antrenarea MODELULUI
@@ -98,6 +101,8 @@ def receive_reading():
     timestamp = datetime.now().isoformat()
     now = datetime.now()
     hour = now.hour
+    hour_sin = np.sin(2 * np.pi * hour / 24)
+    hour_cos = np.cos(2 * np.pi * hour / 24)
     day_of_week = now.weekday()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -107,7 +112,7 @@ def receive_reading():
     rolling_mean = pd.Series(fereastra).mean()
     rolling_std = pd.Series(fereastra).std()
 
-    X = pd.DataFrame([[gas_value, hour, day_of_week, rolling_mean, rolling_std]],columns=["gas_value", "hour", "day_of_week", "rolling_mean", "rolling_std"])
+    X = pd.DataFrame([[gas_value, hour_sin, hour_cos, day_of_week, rolling_mean, rolling_std]],columns=["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"])
     anomaly_score = model.decision_function(X)[0]
     is_anomaly = 1 if model.predict(X)[0] == -1 else 0
                       

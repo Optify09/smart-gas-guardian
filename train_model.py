@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import IsolationForest
 
 conn = sqlite3.connect("readings.db")
@@ -8,6 +9,8 @@ conn.close()
 
 df["timestamp"] = pd.to_datetime(df["timestamp"], format = "mixed")
 df["hour"] = df["timestamp"].dt.hour
+df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
 df["rolling_mean"] = df["gas_value"].rolling(window = 150).mean()
 # La fiecare citire se deschide un sub-tabel care cotine valoarea
 # curenta si cele 149 de citire de dinainte de el si se face
@@ -26,7 +29,7 @@ df["day_of_week"] = df["timestamp"].dt.dayofweek
 # print(df[["gas_value", "rolling_mean", "rolling_std"]].tail(10))
 
 df_clean = df.dropna(subset = ["rolling_mean", "rolling_std"])
-features = ["gas_value", "hour", "day_of_week", "rolling_mean", "rolling_std"]
+features = ["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"]
 X = df_clean[features]
 
 # print(X.shape)
