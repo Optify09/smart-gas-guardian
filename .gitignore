@@ -1,0 +1,7 @@
+venv/
+readings.db
+.claude/
+__pycache__/
+*.pyc
+secrets.h
+Despre proiect.pdf
