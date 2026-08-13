@@ -64,11 +64,12 @@ def train_model():
     # La fiecare citire se deschide un sub-tabel care cotine valoarea
     # curenta si cele 149 de citire de dinainte de el si se face
     # si se verifica cat de volatile au fost valorile in 
-    # ultimele 5 minute prin functia .std()
+    # ultimele 5 minute prin functia .std() 
+    df["deviation"] = (df["gas_value"] - df["rolling_mean"]) / df["rolling_std"]
     df["day_of_week"] = df["timestamp"].dt.dayofweek
 
     df_clean = df.dropna(subset = ["rolling_mean", "rolling_std"])
-    features = ["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"]
+    features = ["deviation"]
     X = df_clean[features]
 
     # Antrenarea MODELULUI
@@ -111,8 +112,8 @@ def receive_reading():
     fereastra = ultimele_valori + [gas_value]
     rolling_mean = pd.Series(fereastra).mean()
     rolling_std = pd.Series(fereastra).std()
-
-    X = pd.DataFrame([[gas_value, hour_sin, hour_cos, day_of_week, rolling_mean, rolling_std]],columns=["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"])
+    deviation = (gas_value - rolling_mean) / rolling_std
+    X = pd.DataFrame([[deviation]],columns=["deviation"])
     anomaly_score = model.decision_function(X)[0]
     is_anomaly = 1 if model.predict(X)[0] == -1 else 0
                       

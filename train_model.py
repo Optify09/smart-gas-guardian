@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 
 conn = sqlite3.connect("readings.db")
-df = pd.read_sql_query("SELECT * FROM readings WHERE timestamp >= '2026-08-10T14:56:00'", conn)
+df = pd.read_sql_query("SELECT * FROM readings WHERE timestamp >= '2026-08-10T14:56:00' AND timestamp <= '2026-08-12T04:29:00'", conn)
 conn.close()
 
 df["timestamp"] = pd.to_datetime(df["timestamp"], format = "mixed")
@@ -21,6 +21,7 @@ df["rolling_std"] = df["gas_value"].rolling(window = 150).std()
 # curenta si cele 149 de citire de dinainte de el si se face
 # si se verifica cat de volatile au fost valorile in 
 # ultimele 5 minute prin functia .std()
+df["deviation"] = (df["gas_value"] - df["rolling_mean"])/df["rolling_std"]
 df["day_of_week"] = df["timestamp"].dt.dayofweek
 
 # print(df.shape)
@@ -29,26 +30,32 @@ df["day_of_week"] = df["timestamp"].dt.dayofweek
 # print(df[["gas_value", "rolling_mean", "rolling_std"]].tail(10))
 
 df_clean = df.dropna(subset = ["rolling_mean", "rolling_std"])
-features = ["gas_value", "hour_sin", "hour_cos", "day_of_week", "rolling_mean", "rolling_std"]
+features = ["deviation"]
 X = df_clean[features]
-
+test_size = 1700
+n_ferestre = 5
+rate_anomalii = []
 # print(X.shape)
 # print(X.head())
 
 # Antrenarea MODELULUI
 
-model = IsolationForest(n_estimators = 100, contamination = 0.03, random_state = 42)
-model.fit(X)
-print("Model antrenat!")
+for i in range(n_ferestre):
+    cutoff = len(X) - test_size * (n_ferestre - i)
+    X_train_i = X.iloc[0:cutoff]
+    X_test_i = X.iloc[cutoff: cutoff+test_size]
+    model_i = IsolationForest(n_estimators = 100, contamination = 0.03, random_state = 42)
+    model_i.fit(X_train_i)
+    predictii_i = model_i.predict(X_test_i)
+    rata = (predictii_i==-1).mean()
+    rate_anomalii.append(rata)
+    print("Fereastra", i+1, ":", round(rata*100, 2), "% anomalii")
 
-df_clean["anomaly"] = model.predict(X)
-df_clean["anomaly_score"] = model.decision_function(X)
-
-print(df_clean["anomaly"].value_counts())
+print("Medie peste toate ferestrele: ", round(sum(rate_anomalii)/len(rate_anomalii)*100, 2), "%")
 
 # test_bricheta = df_clean[(df_clean["timestamp"] >= "2026-07-19 17:51:50") & (df_clean["timestamp"] <= "2026-07-19 17:52:30")]
 # print(test_bricheta[["timestamp", "gas_value", "rolling_std", "anomaly", "anomaly_score"]])
 
-test_tocanita = df_clean[(df_clean["timestamp"] >= "2026-07-20 12:55:00") & (df_clean["timestamp"] <= "2026-07-20 13:10:00")]
-print(test_tocanita[["timestamp", "gas_value", "rolling_mean", "rolling_std", "anomaly", "anomaly_score"]])
+#test_tocanita = df_clean[(df_clean["timestamp"] >= "2026-07-20 12:55:00") & (df_clean["timestamp"] <= "2026-07-20 13:10:00")]
+#print(test_tocanita[["timestamp", "gas_value", "rolling_mean", "rolling_std", "anomaly", "anomaly_score"]])
 
