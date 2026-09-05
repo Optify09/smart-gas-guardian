@@ -151,6 +151,26 @@ Dacă `requirements.txt` lipsește, pachetele necesare sunt, în principiu: `fla
 - `requirements.txt` era salvat în **UTF-16 LE**, ceea ce spărgea `pip install -r`. A fost convertit în UTF-8. Dacă îl regenerezi cu `pip freeze > requirements.txt` din PowerShell, forțează UTF-8: `pip freeze | Out-File -Encoding utf8 requirements.txt`.
 - Niciun model nu se serializează pe disc: `backend_schelet.py` antrenează în memorie la pornire (și reantrenează orar), iar `train_model.py` e doar script de **evaluare** walk-forward. Deci nu există fișier `.pkl` de reîncărcat — grija despre versiunea de scikit-learn contează doar dacă rezultatele diferă, nu pentru încărcare.
 
+### 7.1 Unelte (reinstalate 5 sept. 2026)
+
+```powershell
+winget install --id Git.Git --scope user                    # deja era prezent (2.55.0)
+winget install --id Microsoft.VisualStudioCode --scope user
+winget install --id ArduinoSA.IDE.stable                     # Arduino IDE 2.3.x
+winget install --id ArduinoSA.CLI                            # arduino-cli, pt. setup headless
+```
+
+- **VS Code:** extensia `ms-python.python` instalată (aduce Pylance + debugpy). `code` e la
+  `C:\Users\elect\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd` (poate să nu fie în PATH până la un logout).
+- **arduino-cli** (`C:\Program Files\Arduino CLI\arduino-cli.exe`) configurat cu:
+  - URL board manager: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+  - core `esp32:esp32@3.3.11` instalat
+  - librării: `DHT sensor library@1.4.7` + `Adafruit Unified Sensor@1.1.15`
+- **Test compilare OK:** `arduino-cli compile --fqbn esp32:esp32:esp32 mq2_reader` → 78% flash, fără erori.
+  (FQBN `esp32:esp32:esp32` = placa „ESP32 Dev Module".)
+- **Driver USB-serial:** la conectarea ESP32, dacă nu apare niciun port COM, instalează driverul
+  CP210x (Silicon Labs) sau CH340, în funcție de cip. Necunoscut până se conectează placa.
+
 ---
 
 ## 8. De reținut
