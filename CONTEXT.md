@@ -42,8 +42,13 @@ Diferența e mare și clară, ceea ce face detecția ușoară. Nu e nevoie de fi
 
 - **Framework:** Flask
 - **Bază de date:** SQLite (`readings` — conține datele de senzor colectate; ~64 MB la ultima salvare)
-- **Adresă:** `192.168.100.12`, port `5000` (IP local în rețeaua de acasă)
+- **Adresă:** IP local al laptopului, port `5000`. Rețea Wi-Fi: `DIGI-32KH`. La 5 sept. 2026
+  laptopul era `192.168.1.130` (subnet `192.168.1.x`; înainte de reset era `192.168.100.x`).
+  **IP-ul e DHCP** — dacă ESP32 nu mai trimite date, verifică `ipconfig` vs `SERVER_URL` din
+  `mq2_reader/secrets.h`. De pus rezervare DHCP pe router ca să fie fix.
 - **Endpoint existent:** `POST /readings` — ESP32-ul trimite aici citirile
+- **Pornire:** `.\venv\Scripts\python.exe backend_schelet.py` (PowerShell 5.1 nu are `&&`, folosește `;`).
+  La prima pornire, Windows Firewall cere permisiune → Allow, altfel ESP32 nu ajunge la `:5000`.
 
 **Fișiere principale:**
 
