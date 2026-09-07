@@ -4,7 +4,8 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 
 conn = sqlite3.connect("readings.db")
-df = pd.read_sql_query("SELECT * FROM readings WHERE timestamp >= '2026-08-10T14:56:00' AND timestamp <= '2026-08-12T04:29:00'", conn)
+df = pd.read_sql_query("SELECT * FROM readings WHERE timestamp >= '2026-08-10T14:56:00'", conn)
+df = df[(df["temperature"]>0) & (df["humidity"]>0)]
 conn.close()
 
 df["timestamp"] = pd.to_datetime(df["timestamp"], format = "mixed")

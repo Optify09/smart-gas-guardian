@@ -39,7 +39,10 @@ def init_db():
         cursor.execute("ALTER TABLE readings ADD COLUMN is_anomaly INTEGER")
     except sqlite3.OperationalError:
         pass
-
+    try:
+        cursor.execute("ALTER TABLE readings ADD COLUMN rule_alert INTEGER")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()
@@ -116,10 +119,23 @@ def receive_reading():
     X = pd.DataFrame([[deviation]],columns=["deviation"])
     anomaly_score = model.decision_function(X)[0]
     is_anomaly = 1 if model.predict(X)[0] == -1 else 0
-                      
+    cursor.execute("SELECT gas_value FROM readings ORDER BY id DESC LIMIT 1000")
+    valori_recente = [row[0] for row in cursor.fetchall()]
+    baseline_lent = pd.Series(valori_recente).median()
+    prag = baseline_lent * 1.3
+    peste_prag_acum = gas_value>prag
+    recente = ultimele_valori[0:9] + [gas_value]
+    cate_peste_prag = 0
+    for v in recente: 
+        if(v>prag):
+            cate_peste_prag = cate_peste_prag + 1
+    if peste_prag_acum and cate_peste_prag>=8:
+            rule_alert = 1
+    else:
+            rule_alert = 0
 
-    cursor.execute("INSERT INTO readings (gas_value, timestamp, temperature, humidity, anomaly_score, is_anomaly) VALUES (?, ?, ?, ?, ?,?)",
-    (gas_value, timestamp, temperature, humidity, anomaly_score, is_anomaly))
+    cursor.execute("INSERT INTO readings (gas_value, timestamp, temperature, humidity, anomaly_score, is_anomaly, rule_alert) VALUES (?, ?, ?, ?, ?,?, ?)",
+    (gas_value, timestamp, temperature, humidity, anomaly_score, is_anomaly, rule_alert))
     conn.commit()
     conn.close()
     return "OK", 200
