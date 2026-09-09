@@ -47,12 +47,12 @@ Diferența e mare și clară, ceea ce face detecția ușoară. Nu e nevoie de fi
   **IP-ul e DHCP** — dacă ESP32 nu mai trimite date, verifică `ipconfig` vs `SERVER_URL` din
   `mq2_reader/secrets.h`. De pus rezervare DHCP pe router ca să fie fix.
 - **Endpoint existent:** `POST /readings` — ESP32-ul trimite aici citirile
-- **Pornire:** `.\venv\Scripts\python.exe backend_schelet.py` (PowerShell 5.1 nu are `&&`, folosește `;`).
+- **Pornire:** `.\venv\Scripts\python.exe backend.py` (PowerShell 5.1 nu are `&&`, folosește `;`).
   La prima pornire, Windows Firewall cere permisiune → Allow, altfel ESP32 nu ajunge la `:5000`.
 
 **Fișiere principale:**
 
-- `backend_schelet.py` — scheletul serverului Flask
+- `backend.py` — serverul Flask (redenumit din `backend_schelet.py` pe 9 sept. 2026)
 - `train_model.py` — antrenarea modelului de anomalii
 - `dashboard.py` — început de dashboard
 - `mq2_reader/mq2_reader.ino` — sketch-ul ESP32 care citește senzorul și trimite datele
@@ -154,7 +154,7 @@ Dacă `requirements.txt` lipsește, pachetele necesare sunt, în principiu: `fla
 
 - Proiectul s-a mutat din `...\OneDrive\Documents\Proiecte Esp32 - Acasa\Smart-Gas-Guardian` în `C:\Users\elect\Projects\esp32\Smart-Gas-Guardian`. `venv/pyvenv.cfg` mai conține calea veche pe linia `command` — pur cosmetic.
 - `requirements.txt` era salvat în **UTF-16 LE**, ceea ce spărgea `pip install -r`. A fost convertit în UTF-8. Dacă îl regenerezi cu `pip freeze > requirements.txt` din PowerShell, forțează UTF-8: `pip freeze | Out-File -Encoding utf8 requirements.txt`.
-- Niciun model nu se serializează pe disc: `backend_schelet.py` antrenează în memorie la pornire (și reantrenează orar), iar `train_model.py` e doar script de **evaluare** walk-forward. Deci nu există fișier `.pkl` de reîncărcat — grija despre versiunea de scikit-learn contează doar dacă rezultatele diferă, nu pentru încărcare.
+- Niciun model nu se serializează pe disc: `backend.py` antrenează în memorie la pornire (și reantrenează orar), iar `train_model.py` e doar script de **evaluare** walk-forward. Deci nu există fișier `.pkl` de reîncărcat — grija despre versiunea de scikit-learn contează doar dacă rezultatele diferă, nu pentru încărcare.
 
 ### 7.1 Unelte (reinstalate 5 sept. 2026)
 
