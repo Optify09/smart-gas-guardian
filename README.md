@@ -114,8 +114,8 @@ the collected data, printing the flag rate per window. It does not train the pro
 From ~4 weeks of continuous collection and three controlled gas-release tests (sensor held
 next to an **unlit** burner, gas open ~30 s, window open):
 
-- **Clean-air baseline:** ~2100 raw ADC as of the last test, and drifting — this is why the
-  detection is threshold-free.
+- **Clean-air baseline:** ~2100–2900 raw ADC over the test period and drifting upward — this
+  is why the detection is threshold-free.
 - **Gas release:** reading rose to 3300–4095 (sensor saturation) within ~15 s.
 - **`is_anomaly`** (model) triggered within ~2 s of the rise.
 - **`rule_alert`** triggered ~19 s into the sustained elevation and stayed on through the
@@ -129,6 +129,10 @@ next to an **unlit** burner, gas open ~30 s, window open):
 - A leak lasting more than ~15 minutes slowly pulls the slow baseline up and `rule_alert`
   stops firing. Fine for a demo; would be fixed by excluding the most recent ~30 minutes
   from the baseline window.
+- Each gas exposure raises the baseline a little and it does not fully recover (MQ-2
+  hysteresis), so repeated tests compound it. A baseline that drifted high enough would push
+  the `1.3×` threshold past the sensor's saturation point (4095). Neither showed up in normal
+  operation over the test period; a `baseline + fixed offset` threshold would remove the risk.
 - The MQ-2's ~2 minute warm-up after power-on is not yet surfaced in the dashboard — the
   first readings after a restart can look anomalous.
 - Alerting is the dashboard state only; there is no push notification channel yet.
