@@ -1,12 +1,12 @@
 # Smart Gas Guardian
 
-**Most gas alarms trip at a fixed number. This one learns what your kitchen normally reads
-and watches for the deviation** — so it adapts to cooking, ventilation and a drifting sensor
-instead of being recalibrated.
+**Most gas alarms trip at a fixed number. This one scores every reading against its own
+recent baseline** — so it adapts to cooking, ventilation and a drifting sensor instead of
+needing a threshold set for it.
 
 Threshold-free kitchen gas-leak detection: an ESP32 + MQ-2 streams to a Flask service that
-learns the room's normal air with an Isolation Forest, backs it with a sustained-elevation
-rule, and shows the verdict on a live dashboard.
+turns every reading into a rolling z-score, flags the outliers with an Isolation Forest,
+backs that with a sustained-elevation rule, and shows the verdict on a live dashboard.
 
 <!-- TODO: demo GIF here — dashboard going NORMAL -> WARNING -> ALERT while gas is released
      near the sensor. Record the screen, convert to GIF, drop it in and link it:
@@ -44,12 +44,22 @@ false-alarm constantly or miss a real leak, depending on the week.
 
 So the system uses two relative signals instead:
 
-**1. `deviation` → Isolation Forest.** `deviation = (reading − rolling_mean) / rolling_std`
-over the last ~5 minutes. This asks "how unusual is the reading compared to the last few
-minutes?" and is immune to slow drift because it re-references itself continuously. An
-unsupervised Isolation Forest (`contamination = 0.03`) learns the normal distribution of
-`deviation` and flags outliers. Adding temperature, humidity and time-of-day as features was
-tested and dropped — the drift makes them unreliable and they barely changed the results.
+**1. `deviation` → Isolation Forest.** Each reading becomes
+`deviation = (reading − rolling_mean) / rolling_std` over the last ~5 minutes — a rolling
+z-score that asks "how far is this from the last few minutes?" It re-references itself
+continuously, so it doesn't matter what the absolute baseline is or how far it has drifted.
+An unsupervised Isolation Forest (`contamination = 0.03`), re-trained hourly, learns the
+distribution of `deviation` from the collected data and flags the tails.
+
+To be precise about what the model does: with a single feature the Isolation Forest is close
+to a data-calibrated threshold on that z-score — it is not learning a multi-dimensional
+"shape" of normal. What it adds over a hand-picked cutoff is that it sets the boundary itself
+from the real, asymmetric distribution (gas spikes up more than it dips down) and keeps it
+calibrated as more data arrives. Temperature, humidity and time-of-day were tested as extra
+features and dropped: the baseline drift makes them unreliable and they barely moved the
+results. A natural next step would be more *relative* features that are also drift-safe —
+rate of change, ratio to a longer baseline — which would give the model genuine multivariate
+structure to learn.
 
 **2. Sustained-excess rule.** The model catches a *sudden* spike instantly but stops flagging
 ~30 seconds later once the rolling mean catches up — a slow or plateauing leak can slip
