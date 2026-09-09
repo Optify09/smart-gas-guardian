@@ -25,14 +25,13 @@ def show_data():
         st.warning("WARNING")
     else:
         st.error("ALERT")
-    st.metric("Current gas value", ultima["gas_value"])
+    st.metric("Current gas value:", ultima["gas_value"])
     ultima_ora = pd.to_datetime(ultima["timestamp"])
     varsta = (pd.Timestamp.now()-ultima_ora).total_seconds()
     if(varsta>15):
         st.error(f"SENSOR OFFLINE - last reading {int(varsta)}s ago")
     else:
         st.caption(f"Sensor online - last reading {int(varsta)}s ago")
-    st.dataframe(df)
     df_grafic = df.sort_values("timestamp")
     warning_df = df_grafic[df_grafic["is_anomaly"]==1]
     alert_df = df_grafic[df_grafic["rule_alert"]==1]
@@ -40,4 +39,5 @@ def show_data():
     p_warning = alt.Chart(warning_df).mark_circle(color = "orange", size = 50).encode(x="timestamp:T", y="gas_value:Q")
     p_alert = alt.Chart(alert_df).mark_circle(color = "red", size = 70).encode(x="timestamp:T", y="gas_value:Q")
     st.altair_chart(linie + p_warning + p_alert, use_container_width = True)
+    st.dataframe(df)
 show_data()

@@ -8,9 +8,11 @@ Threshold-free kitchen gas-leak detection: an ESP32 + MQ-2 streams to a Flask se
 turns every reading into a rolling z-score, flags the outliers with an Isolation Forest,
 backs that with a sustained-elevation rule, and shows the verdict on a live dashboard.
 
-<!-- TODO: demo GIF here — dashboard going NORMAL -> WARNING -> ALERT while gas is released
-     near the sensor. Record the screen, convert to GIF, drop it in and link it:
-     ![demo](docs/demo.gif) -->
+![The dashboard going NORMAL → WARNING → ALERT while gas is released next to the sensor, then clearing](docs/demo.gif)
+
+*Gas opened next to the sensor for ~30 s. `WARNING` (model) fires within ~3 s of the rise,
+`ALERT` (rule) ~25 s in once the elevation is sustained; both clear as the air returns to
+baseline. Sped up ~1.8×.*
 
 ---
 
