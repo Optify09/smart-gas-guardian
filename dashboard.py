@@ -9,9 +9,13 @@ st.title("Smart Gas Guardian - Dashboard")
 @st.fragment(run_every = "2s")
 def show_data():
     conn = sqlite3.connect("readings.db")
-    df = pd.read_sql_query("SELECT * FROM readings ORDER BY id DESC LIMIT 1000", conn)
+    cutoff = (pd.Timestamp.now()-pd.Timedelta(hours = 1)).isoformat()
+    df = pd.read_sql_query("SELECT * FROM readings WHERE timestamp >= ? ORDER BY id DESC", conn, params = [cutoff,])
     #df = df.sort_values("id")
     conn.close()
+    if len(df) == 0:
+        st.error("SENSOR OFFLINE - no readings in the last hour")
+        return 
     ultima = df.iloc[0]
     if ultima["rule_alert"]==1:
         status = "ALERT"

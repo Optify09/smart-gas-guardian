@@ -11,8 +11,8 @@ backs that with a sustained-elevation rule, and shows the verdict on a live dash
 ![The dashboard going NORMAL → WARNING → ALERT while gas is released next to the sensor, then clearing](docs/demo.gif)
 
 *Gas opened next to the sensor for ~30 s. `WARNING` (model) fires within ~3 s of the rise,
-`ALERT` (rule) ~25 s in once the elevation is sustained; both clear as the air returns to
-baseline. Sped up ~1.8×.*
+`ALERT` (rule) ~20 s in once the elevation is sustained — and `ALERT` stays on through the
+decay tail after the gas is shut off, where the model has already gone quiet. Sped up ~3×.*
 
 ---
 
